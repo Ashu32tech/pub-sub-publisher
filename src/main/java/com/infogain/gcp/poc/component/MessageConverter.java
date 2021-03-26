@@ -17,7 +17,7 @@ public class MessageConverter {
         String result = StringUtils.EMPTY;
 
         try{
-            log.info("going to convert object into json {}", object);
+            log.info("converting object into json {}", object);
             result = objectMapper.writeValueAsString(object);
             log.info("converted json {}", result);
         }catch (Exception e){

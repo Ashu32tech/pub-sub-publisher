@@ -3,6 +3,7 @@ package com.infogain.gcp.poc.service;
 import com.infogain.gcp.poc.component.MessageConverter;
 import com.infogain.gcp.poc.entity.PNREntity;
 import com.infogain.gcp.poc.entity.PNROutBoxEntity;
+import com.infogain.gcp.poc.model.PNRModel;
 import com.infogain.gcp.poc.model.PublishMessageModel;
 import com.infogain.gcp.poc.repository.PNROutBoxRepository;
 import com.infogain.gcp.poc.repository.PNRRepository;
@@ -41,11 +42,11 @@ public class PublishService {
     private String processMessage(PNREntity pnrEntity, Map<String, String> attributes) {
         log.info("Processing PNREntity={}", pnrEntity);
 
-        if(StringUtils.isNotBlank(pnrEntity.getRemark())){
+        if (StringUtils.isNotBlank(pnrEntity.getRemark())) {
             attributes.put("remark", pnrEntity.getRemark());
         }
 
-        if(StringUtils.isNotBlank(pnrEntity.getMobileNumber())){
+        if (StringUtils.isNotBlank(pnrEntity.getMobileNumber())) {
             attributes.put("mobileNumber", pnrEntity.getMobileNumber());
         }
 
@@ -60,50 +61,53 @@ public class PublishService {
         log.info("published message {} to topic {}", message, topicName);
     }
 
-    private PNROutBoxEntity savePNROutBoxEntity(PNROutBoxEntity pnrOutBoxEntity){
+    private PNROutBoxEntity savePNROutBoxEntity(PNROutBoxEntity pnrOutBoxEntity) {
         return pnrOutBoxRepository.save(pnrOutBoxEntity);
     }
 
-    private List<PNROutBoxEntity> saveOrUpdatePNROutBoxEntityList(List<PNROutBoxEntity> pnrOutBoxEntityList){
+    private List<PNROutBoxEntity> saveOrUpdatePNROutBoxEntityList(List<PNROutBoxEntity> pnrOutBoxEntityList) {
         return IterableUtils.toList(pnrOutBoxRepository.saveAll(pnrOutBoxEntityList));
     }
 
-    private List<PNROutBoxEntity> findPNROutBoxEntityListByPnrIdList(List<String> pnrIdList){
+    private List<PNROutBoxEntity> findPNROutBoxEntityListByPnrIdList(List<String> pnrIdList) {
         return IterableUtils.toList(pnrOutBoxRepository.findAllById(pnrIdList));
     }
 
     @Transactional
-    public String publish(String pnrId){
-        log.info("find PNREntity by pnrId={}", pnrId);
-        Optional<PNREntity> pnrEntityOptional = pnrRepository.findPNREntityByPnrId(pnrId);
+    public String publish(PNRModel pnrModel) {
+        String pnrId = pnrModel.getPnrId();
 
-        if(pnrEntityOptional.isPresent()){
-            PNREntity pnrEntity = pnrEntityOptional.get();
-            Map<String, String> attributes = new HashMap<>();
-            String messageJson = processMessage(pnrEntity, attributes);
-            publishMessage(messageJson, attributes);
-        }else {
-            log.info("PNREntity not found by pnrId={}", pnrId);
+        if (StringUtils.isEmpty(pnrId)) {
+            log.info("pnrId is null or empty");
+            return "pnrId is null or empty";
         }
+
+//        log.info("find PNREntity by pnrId={}", pnrId);
+//        Optional<PNREntity> pnrEntityOptional = pnrRepository.findPNREntityByPnrId(pnrId);
+
+        PNREntity pnrEntity = pnrModel.buildEntity();
+        Map<String, String> attributes = new HashMap<>();
+        String messageJson = processMessage(pnrEntity, attributes);
+        publishMessage(messageJson, attributes);
 
         // update PNROutBoxEntity.isProcessed to true, retryCount = retryCount + 1
         log.info("updating PNROutBoxEntity.isProcessed to true, retryCount = retryCount + 1");
         Optional<PNROutBoxEntity> pnrOutBoxEntityOptional = pnrOutBoxRepository.findById(pnrId);
-        if(pnrOutBoxEntityOptional.isPresent()){
+        if (pnrOutBoxEntityOptional.isPresent()) {
             PNROutBoxEntity pnrOutBoxEntity = pnrOutBoxEntityOptional.get();
             pnrOutBoxEntity.setIsProcessed(true);
-            pnrOutBoxEntity.setRetryCount(pnrOutBoxEntity.getRetryCount()+1);
-            pnrOutBoxRepository.save(pnrOutBoxEntity);
+            pnrOutBoxEntity.setRetryCount(pnrOutBoxEntity.getRetryCount() + 1);
+            savePNROutBoxEntity(pnrOutBoxEntity);
         }
         log.info("updated PNROutBoxEntity.isProcessed to true, retryCount = retryCount + 1");
 
         return "success";
     }
 
-    public String publishFailedRecords(){
+    public String publishFailedRecords() {
         List<PNREntity> pnrEntityList = ListUtils.emptyIfNull(pnrRepository.findPNREntityListByIsProcessedAndRetryCount(false, 5));
 
-        if(CollectionUtils.isEmpty(pnrEntityList)){
+        if (CollectionUtils.isEmpty(pnrEntityList)) {
             log.info("No failed PNREntity records to process");
             return "success";
         }
@@ -120,19 +124,20 @@ public class PublishService {
             pnrIdList.add(pnrEntity.getPnrId());
         });
 
+        // TODO check to publish in batch rather than iterating
         publishMessageModelList.forEach(publishMessageModel -> {
             publishMessage(publishMessageModel.getMessage(), publishMessageModel.getAttributes());
         });
 
         // update PNROutBoxEntity.isProcessed to true, retryCount = retryCount + 1
-        log.info("updating PNROutBoxEntity.isProcessed to true, retryCount = retryCount + 1");
+        log.info("updating isProcessed to true, retryCount = retryCount + 1");
         List<PNROutBoxEntity> pnrOutBoxEntityList = findPNROutBoxEntityListByPnrIdList(pnrIdList);
         pnrOutBoxEntityList.forEach(pnrOutBoxEntity -> {
             pnrOutBoxEntity.setIsProcessed(true);
-            pnrOutBoxEntity.setRetryCount(pnrOutBoxEntity.getRetryCount()+1);
+            pnrOutBoxEntity.setRetryCount(pnrOutBoxEntity.getRetryCount() + 1);
         });
         saveOrUpdatePNROutBoxEntityList(pnrOutBoxEntityList);
-        log.info("updated PNROutBoxEntity.isProcessed to true, retryCount = retryCount + 1");
+        log.info("updated isProcessed to true, retryCount = retryCount + 1");
 
         return "success";
     }
