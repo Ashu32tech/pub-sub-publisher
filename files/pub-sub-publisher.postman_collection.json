@@ -6,7 +6,7 @@
 	},
 	"item": [
 		{
-			"name": "/api/v1/publish/{pnrId}",
+			"name": "/api/v1/publish",
 			"event": [
 				{
 					"listen": "prerequest",
@@ -38,12 +38,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8081/api/v1/publish",
-					"protocol": "http",
+					"raw": "{{host}}/api/v1/publish",
 					"host": [
-						"localhost"
+						"{{host}}"
 					],
-					"port": "8081",
 					"path": [
 						"api",
 						"v1",
@@ -54,17 +52,15 @@
 			"response": []
 		},
 		{
-			"name": "/api/v1/publish",
+			"name": "/api/v1/scheduler/job/publish",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8081/api/v1/scheduler/job/publish",
-					"protocol": "http",
+					"raw": "{{host}}/api/v1/scheduler/job/publish",
 					"host": [
-						"localhost"
+						"{{host}}"
 					],
-					"port": "8081",
 					"path": [
 						"api",
 						"v1",
