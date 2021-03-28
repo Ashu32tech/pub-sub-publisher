@@ -22,4 +22,11 @@ public class PNROutBoxEntity {
 
     @Column(name = "retry_count")
     private Integer retryCount;
+
+    @Column(name = "event_type")
+    private String eventType;
+
+    @Column(name = "processed_by")
+    private String processedBy;
+
 }

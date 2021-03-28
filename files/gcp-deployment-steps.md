@@ -37,7 +37,7 @@ gcloud container clusters create "cluster-1" --scopes "https://www.googleapis.co
 ```
 * Deploy
 ```
-kubectl create deployment spanner-crud --image=gcr.io/<project-id>/pub-sub-publisher:latest
+kubectl create deployment pub-sub-publisher --image=gcr.io/<project-id>/pub-sub-publisher:latest
 ```
 * To view the deployment that you created, simply run the following command
 ```
@@ -49,7 +49,7 @@ kubectl get pods
 ```
 * In Cloud Shell, you can expose the Pod to the public internet by creating a Kubernetes LoadBalancer service
 ```
-kubectl create service loadbalancer spanner-crud --tcp=8080:8080
+kubectl create service loadbalancer pub-sub-publisher --tcp=8080:8080
 ```
 * To find the publicly accessible IP address of the service, simply request `kubectl` to list all the cluster services
 ```
