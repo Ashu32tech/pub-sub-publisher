@@ -14,5 +14,6 @@ public class PNREntity {
     private String pnrId;
     private String mobileNumber;
     private String remark;
-
+    private String pnrOutBoxId;
+    ;
 }

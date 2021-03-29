@@ -17,6 +17,7 @@ public class PNRModel {
     private String pnrId;
     private String mobileNumber;
     private String remark;
+    private String pnrOutBoxId;
 
     @SneakyThrows
     public PNREntity buildEntity(){

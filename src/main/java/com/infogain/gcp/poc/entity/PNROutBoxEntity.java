@@ -14,6 +14,9 @@ import org.springframework.cloud.gcp.data.spanner.core.mapping.Table;
 public class PNROutBoxEntity {
 
     @PrimaryKey
+    @Column(name = "id")
+    private String id;
+
     @Column(name = "pnr_id")
     private String pnrId;
 

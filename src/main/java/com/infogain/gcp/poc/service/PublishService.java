@@ -77,6 +77,7 @@ public class PublishService {
     @Transactional
     public String publish(PNRModel pnrModel) {
         String pnrId = pnrModel.getPnrId();
+        String pnrOutBoxId = pnrModel.getPnrOutBoxId();
 
         try{
             if (StringUtils.isEmpty(pnrId)) {
@@ -106,13 +107,16 @@ public class PublishService {
 
             // update PNROutBoxEntity.isProcessed to true, retryCount = retryCount + 1
             log.info("updating PNROutBoxEntity.isProcessed to true, retryCount = retryCount + 1");
-            Optional<PNROutBoxEntity> pnrOutBoxEntityOptional = pnrOutBoxRepository.findById(pnrId);
+            // Optional<PNROutBoxEntity> pnrOutBoxEntityOptional = pnrOutBoxRepository.findById(pnrId);
+            Optional<PNROutBoxEntity> pnrOutBoxEntityOptional = pnrOutBoxRepository.findById(pnrOutBoxId);
+
             if (pnrOutBoxEntityOptional.isPresent()) {
                 PNROutBoxEntity pnrOutBoxEntity = pnrOutBoxEntityOptional.get();
                 if(!Constants.RETRY_PNR_ID_LIST.contains(pnrOutBoxEntity.getPnrId())){
                     pnrOutBoxEntity.setIsProcessed(true);
+                    pnrOutBoxEntity.setProcessedBy(Constants.API);
                 }
-                pnrOutBoxEntity.setProcessedBy(Constants.API);
+
                 savePNROutBoxEntity(pnrOutBoxEntity);
             }
             log.info("updated PNROutBoxEntity.isProcessed to true, retryCount = retryCount + 1");
@@ -132,7 +136,7 @@ public class PublishService {
             return "success";
         }
 
-        List<String> pnrIdList = new ArrayList<>();
+        List<String> pnrOutBoxIdList = new ArrayList<>();
         List<PublishMessageModel> publishMessageModelList = new ArrayList<>();
 
         pnrEntityList.forEach(pnrEntity -> {
@@ -140,7 +144,7 @@ public class PublishService {
             String messageJson = processMessage(pnrEntity, attributes);
             PublishMessageModel publishMessageModel = PublishMessageModel.builder().message(messageJson).attributes(attributes).build();
             publishMessageModelList.add(publishMessageModel);
-            pnrIdList.add(pnrEntity.getPnrId());
+            pnrOutBoxIdList.add(pnrEntity.getPnrOutBoxId());
         });
 
         // TODO check to publish in batch rather than iterating
@@ -150,7 +154,7 @@ public class PublishService {
 
         // update PNROutBoxEntity.isProcessed to true, retryCount = retryCount + 1
         log.info("updating isProcessed to true, retryCount = retryCount + 1");
-        List<PNROutBoxEntity> pnrOutBoxEntityList = findPNROutBoxEntityListByPnrIdList(pnrIdList);
+        List<PNROutBoxEntity> pnrOutBoxEntityList = findPNROutBoxEntityListByPnrIdList(pnrOutBoxIdList);
         pnrOutBoxEntityList.forEach(pnrOutBoxEntity -> {
             if(!Constants.RETRY_PNR_ID_LIST.contains(pnrOutBoxEntity.getPnrId())){
                 pnrOutBoxEntity.setIsProcessed(true);
