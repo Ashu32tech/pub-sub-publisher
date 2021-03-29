@@ -1,7 +1,7 @@
 server.port: 8080
 
 spring:
-  profiles.active: dev
+  profiles.active: test
   cloud:
     gcp:
       project-id: gcp-practice-project-307011
