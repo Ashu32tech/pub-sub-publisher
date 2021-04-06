@@ -15,5 +15,7 @@ public class PublishMessageModel {
 
     private String message;
     private Map<String, String> attributes;
+    private String pnrOutBoxId;
+    
 
 }

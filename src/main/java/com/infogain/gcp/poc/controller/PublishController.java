@@ -28,5 +28,17 @@ public class PublishController {
         log.info("completed processing failed records");
         return Mono.just(result);
     }
+    
+    @GetMapping(value = "/api/v1/publish/unprocessedmsg", produces = MediaType.TEXT_PLAIN_VALUE)
+    public Mono<String> publishUnProcessedRecords(){
+        log.info("started processing unprocessed records");
+        String result = publishService.publishUnprocessedMsg();
+        log.info("completed processing unprocessed records");
+        return Mono.just(result);
+    }
+    
+    
+    
+    
 
 }

@@ -5,7 +5,8 @@ import java.util.List;
 
 public final class Constants {
 
-    private Constants(){}
+    public static Object INSERT;
+	private Constants(){}
 
     public static final String API = "API";
     public static final String CLOUD_SCHEDULER = "CLOUD_SCHEDULER";

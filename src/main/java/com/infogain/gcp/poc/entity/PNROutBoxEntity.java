@@ -31,5 +31,8 @@ public class PNROutBoxEntity {
 
     @Column(name = "processed_by")
     private String processedBy;
+    
+    @Column(name="payload")
+    private String payload;
 
 }
